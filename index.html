@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b32">
+  <title>My Money Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: #f3f6f4; color: #182c25;
+    }
+    header {
+      background: #123b32; color: white;
+      padding: 24px 18px; border-radius: 0 0 22px 22px;
+    }
+    header h1 { margin: 0 0 8px; font-size: 25px; }
+    header p { margin: 0; color: #d4e7dd; }
+    main { max-width: 650px; margin: auto; padding: 16px; }
+    .summary, .panel, .person {
+      background: white; border-radius: 14px;
+      padding: 16px; margin-bottom: 14px;
+      box-shadow: 0 2px 8px #183b3210;
+    }
+    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .muted { color: #63746c; font-size: 13px; }
+    .amount { font-size: 20px; font-weight: bold; margin-top: 7px; }
+    h2 { font-size: 18px; margin: 0 0 14px; }
+    input, select, button {
+      width: 100%; padding: 12px; margin: 5px 0 10px;
+      border-radius: 9px; border: 1px solid #d4ddd7;
+      font-size: 16px;
+    }
+    button {
+      background: #176b50; color: white;
+      border: none; font-weight: bold; cursor: pointer;
+    }
+    button.secondary { background: #e4eee8; color: #164b38; }
+    .person { cursor: pointer; }
+    .person h3 { margin: 0 0 7px; }
+    .person p { margin: 5px 0; }
+    .positive { color: #147447; }
+    .negative { color: #b04435; }
+    .transaction {
+      padding: 12px 0; border-bottom: 1px solid #e7ece8;
+      overflow-wrap: anywhere;
+    }
+    .transaction:last-child { border-bottom: none; }
+    .hidden { display: none; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .small-button { padding: 9px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Money Tracker</h1>
+    <p>Keep track of money between you and others</p>
+  </header>
+
+  <main>
+    <section class="summary">
+      <div>
+        <div class="muted">People</div>
+        <div class="amount" id="peopleCount">0</div>
+      </div>
+      <div>
+        <div class="muted">Money owed to you</div>
+        <div class="amount positive" id="owedToYou">Rs. 0</div>
+      </div>
+      <div>
+        <div class="muted">You owe others</div>
+        <div class="amount negative" id="youOwe">Rs. 0</div>
+      </div>
+      <div>
+        <div class="muted">Transactions</div>
+        <div class="amount" id="transactionCount">0</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Add a person</h2>
+      <form id="personForm">
+        <input id="personName" placeholder="Person's name" required maxlength="80">
+        <button type="submit">+ Add Person</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>People and balances</h2>
+      <div id="peopleList"></div>
+      <p id="emptyPeople" class="muted">No people yet. Add your first person above.</p>
+    </section>
+
+    <section id="detail" class="panel hidden">
+      <h2 id="detailTitle">Person</h2>
+      <p id="detailBalance"></p>
+
+      <h2>Record a transaction</h2>
+      <form id="transactionForm">
+        <label for="direction" class="muted">Transaction type</label>
+        <select id="direction">
+          <option value="sent">I sent money to them</option>
+          <option value="received">They sent money to me</option>
+        </select>
+        <label for="amount" class="muted">Amount (PKR)</label>
+        <input id="amount" type="number" min="0.01" step="0.01" placeholder="e.g. 5000" required>
+        <label for="purpose" class="muted">Purpose</label>
+        <input id="purpose" placeholder="e.g. Loan, rent, groceries" required maxlength="200">
+        <label for="date" class="muted">Date</label>
+        <input id="date" type="date" required>
+        <button type="submit">Save Transaction</button>
+      </form>
+
+      <h2>Transaction history</h2>
+      <div id="history"></div>
+      <button id="closeDetail" class="secondary" type="button">Close Person</button>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "myFirstAppMoneyTrackerV1";
+    let data = { people: [], transactions: [] };
+    let selectedPerson = null;
+
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.people) &&
+            Array.isArray(parsed.transactions)) data = parsed;
+      }
+    } catch (error) {
+      alert("Could not read saved data in this browser.");
+    }
+
+    const money = value => "Rs. " + Number(value).toLocaleString(
+      "en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 2 }
+    );
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (error) {
+        alert("Could not save data. Your browser storage may be full.");
+      }
+    }
+
+    function balanceFor(personId) {
+      return data.transactions
+        .filter(t => t.personId === personId)
+        .reduce((total, t) =>
+          total + (t.direction === "sent" ? t.amount : -t.amount), 0);
+    }
+
+    function render() {
+      document.getElementById("peopleCount").textContent = data.people.length;
+      document.getElementById("transactionCount").textContent =
+        data.transactions.length;
+
+      let owed = 0, owe = 0;
+      data.people.forEach(person => {
+        const balance = balanceFor(person.id);
+        if (balance > 0) owed += balance;
+        if (balance < 0) owe += Math.abs(balance);
+      });
+      document.getElementById("owedToYou").textContent = money(owed);
+      document.getElementById("youOwe").textContent = money(owe);
+
+      const list = document.getElementById("peopleList");
+      list.replaceChildren();
+      document.getElementById("emptyPeople").classList.toggle(
+        "hidden", data.people.length > 0
+      );
+
+      data.people.forEach(person => {
+        const balance = balanceFor(person.id);
+        const card = document.createElement("div");
+        card.className = "person";
+        const name = document.createElement("h3");
+        name.textContent = person.name;
+        const amount = document.createElement("p");
+        amount.className = balance > 0 ? "positive" :
+          balance < 0 ? "negative" : "";
+        amount.textContent = balance > 0
+          ? "They owe you " + money(balance)
+          : balance < 0
+            ? "You owe them " + money(Math.abs(balance))
+            : "All settled — " + money(0);
+        const open = document.createElement("button");
+        open.className = "small-button";
+        open.textContent = "Open Record";
+        open.addEventListener("click", () => openPerson(person.id));
+        card.append(name, amount, open);
+        list.append(card);
+      });
+
+      if (selectedPerson) openPerson(selectedPerson);
+    }
+
+    function openPerson(personId) {
+      selectedPerson = personId;
+      const person = data.people.find(p => p.id === personId);
+      if (!person) {
+        selectedPerson = null;
+        document.getElementById("detail").classList.add("hidden");
+        return;
+      }
+
+      document.getElementById("detail").classList.remove("hidden");
+      document.getElementById("detailTitle").textContent = person.name;
+      const balance = balanceFor(personId);
+      document.getElementById("detailBalance").textContent =
+        balance > 0 ? "They owe you " + money(balance) :
+        balance < 0 ? "You owe them " + money(Math.abs(balance)) :
+        "Your balance is settled.";
+
+      const history = document.getElementById("history");
+      history.replaceChildren();
+      const transactions = data.transactions
+        .filter(t => t.personId === personId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      if (!transactions.length) {
+        history.textContent = "No transactions recorded yet.";
+      }
+
+      transactions.forEach(t => {
+        const item = document.createElement("div");
+        item.className = "transaction";
+        const description = document.createElement("div");
+        description.textContent =
+          (t.direction === "sent" ? "You sent " : "You received ") +
+          money(t.amount);
+        const purpose = document.createElement("div");
+        purpose.textContent = t.purpose;
+        const date = document.createElement("div");
+        date.className = "muted";
+        date.textContent = t.date;
+        item.append(description, purpose, date);
+        history.append(item);
+      });
+    }
+
+    document.getElementById("personForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const input = document.getElementById("personName");
+      const name = input.value.trim();
+      if (!name) return;
+      data.people.push({
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        name
+      });
+      save();
+      input.value = "";
+      render();
+    });
+
+    document.getElementById("transactionForm").addEventListener("submit", event => {
+      event.preventDefault();
+      if (!selectedPerson) return;
+      const amount = Number(document.getElementById("amount").value);
+      const purpose = document.getElementById("purpose").value.trim();
+      const date = document.getElementById("date").value;
+      if (!Number.isFinite(amount) || amount <= 0 || !purpose || !date) {
+        alert("Please enter a valid amount, purpose, and date.");
+        return;
+      }
+      data.transactions.push({
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        personId: selectedPerson,
+        direction: document.getElementById("direction").value,
+        amount, purpose, date
+      });
+      save();
+      document.getElementById("amount").value = "";
+      document.getElementById("purpose").value = "";
+      render();
+    });
+
+    document.getElementById("closeDetail").addEventListener("click", () => {
+      selectedPerson = null;
+      document.getElementById("detail").classList.add("hidden");
+    });
+
+    document.getElementById("date").value =
+      new Date().toLocaleDateString("en-CA");
+    render();
+  </script>
+</body>
+</html>
