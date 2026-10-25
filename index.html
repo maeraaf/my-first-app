@@ -1,615 +1,482 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#123b32">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>My Money Tracker</title>
-
-  <style>
-    :root {
-      --green: #123b32;
-      --green-light: #e5f3eb;
-      --accent: #197653;
-      --bg: #f4f7f5;
-      --text: #1c3028;
-      --muted: #687970;
-      --border: #e1e9e4;
-      --red: #b5473b;
-      --white: #ffffff;
-    }
-
-    * { box-sizing: border-box; }
-
-    html {
-      -webkit-text-size-adjust: 100%;
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.45;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button, input, select {
-      font: inherit;
-    }
-
-    button {
-      min-height: 46px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    header {
-      background: var(--green);
-      color: white;
-      padding: calc(22px + env(safe-area-inset-top)) 18px 25px;
-      border-radius: 0 0 23px 23px;
-    }
-
-    .header-inner, main {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 25px;
-      letter-spacing: -0.5px;
-    }
-
-    header p {
-      margin: 5px 0 0;
-      color: #d1e3d9;
-      font-size: 14px;
-    }
-
-    main {
-      padding: 16px 14px calc(28px + env(safe-area-inset-bottom));
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 17px;
-    }
-
-    .stat {
-      min-width: 0;
-      padding: 15px 13px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      box-shadow: 0 3px 12px #173b2d08;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .amount {
-      margin-top: 6px;
-      font-size: clamp(18px, 4.5vw, 23px);
-      font-weight: 750;
-      letter-spacing: -0.4px;
-      overflow-wrap: anywhere;
-    }
-
-    .positive { color: #177449; }
-    .negative { color: var(--red); }
-
-    .panel {
-      padding: 17px 15px;
-      margin-bottom: 15px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 3px 12px #173b2d08;
-      scroll-margin-top: 12px;
-    }
-
-    h2 {
-      margin: 0 0 13px;
-      font-size: 18px;
-      letter-spacing: -0.2px;
-    }
-
-    h3 {
-      margin: 0;
-      font-size: 16px;
-      overflow-wrap: anywhere;
-    }
-
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-size: 13px;
-      font-weight: 650;
-      color: #52655b;
-    }
-
-    input, select {
-      display: block;
-      width: 100%;
-      min-width: 0;
-      min-height: 47px;
-      margin: 0 0 12px;
-      padding: 11px 12px;
-      border: 1px solid #d4dfd8;
-      border-radius: 10px;
-      background: white;
-      color: var(--text);
-      font-size: 16px;
-    }
-
-    input:focus, select:focus, button:focus-visible {
-      outline: 3px solid #8bc5a8;
-      outline-offset: 2px;
-    }
-
-    button {
-      width: 100%;
-      padding: 11px 14px;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
-      color: white;
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    button:active {
-      opacity: 0.84;
-    }
-
-    button.secondary {
-      background: var(--green-light);
-      color: var(--green);
-    }
-
-    .people-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .person {
-      min-width: 0;
-      padding: 14px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-    }
-
-    .person-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .person-balance {
-      margin-top: 5px;
-      font-size: 14px;
-      font-weight: 650;
-      overflow-wrap: anywhere;
-    }
-
-    .person .small-button {
-      width: auto;
-      min-width: 100px;
-      min-height: 40px;
-      padding: 8px 11px;
-      flex-shrink: 0;
-      font-size: 13px;
-    }
-
-    .empty {
-      padding: 12px 2px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .balance-box {
-      padding: 13px;
-      margin-bottom: 18px;
-      border-radius: 12px;
-      background: var(--bg);
-      font-size: 15px;
-      font-weight: 650;
-      overflow-wrap: anywhere;
-    }
-
-    .section-label {
-      margin: 20px 0 10px;
-      font-size: 16px;
-      font-weight: 750;
-    }
-
-    .transaction {
-      padding: 13px 0;
-      border-bottom: 1px solid var(--border);
-      overflow-wrap: anywhere;
-    }
-
-    .transaction:last-child {
-      border-bottom: 0;
-    }
-
-    .transaction-title {
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .transaction-purpose {
-      margin-top: 4px;
-      font-size: 14px;
-      overflow-wrap: anywhere;
-    }
-
-    .transaction-date {
-      margin-top: 3px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .hidden { display: none !important; }
-
-    .hint {
-      margin: -3px 0 12px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    @media (min-width: 520px) {
-      main { padding-left: 20px; padding-right: 20px; }
-      .panel { padding: 20px; }
-      .summary { gap: 12px; }
-      .stat { padding: 17px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Money Tracker</title>
+<style>
+:root{--green:#123b32;--accent:#197653;--pale:#e5f3eb;--bg:#f4f7f5;--text:#1c3028;--muted:#687970;--border:#e1e9e4;--red:#b5473b;--white:#fff}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit}button{min-height:44px;cursor:pointer;touch-action:manipulation}
+header{background:var(--green);color:white;padding:calc(20px + env(safe-area-inset-top)) 17px 23px;border-radius:0 0 22px 22px}
+.header-inner,main{width:100%;max-width:640px;margin:auto}header h1{font-size:25px;letter-spacing:-.5px;margin:0}header p{font-size:14px;color:#d1e3d9;margin:5px 0 0}
+main{padding:15px 13px calc(28px + env(safe-area-inset-bottom))}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:15px}.stat,.panel{background:white;border:1px solid var(--border);border-radius:15px;box-shadow:0 3px 12px #173b2d08}
+.stat{padding:13px;min-width:0}.muted{color:var(--muted);font-size:13px}.amount{font-size:clamp(18px,4.4vw,23px);font-weight:750;letter-spacing:-.4px;overflow-wrap:anywhere;margin-top:5px}.positive{color:#177449}.negative{color:var(--red)}
+.panel{padding:16px 14px;margin-bottom:14px;scroll-margin-top:10px}h2{font-size:18px;margin:0 0 13px;letter-spacing:-.2px}h3{font-size:16px;margin:0;overflow-wrap:anywhere}
+label{display:block;margin:9px 0 5px;font-size:13px;font-weight:650;color:#52655b}
+input,select{width:100%;min-width:0;min-height:46px;margin:0 0 10px;padding:10px 11px;border:1px solid #d4dfd8;border-radius:10px;background:white;color:var(--text);font-size:16px}
+input:focus,select:focus,button:focus-visible{outline:3px solid #8bc5a8;outline-offset:2px}
+button{border:0;border-radius:10px;padding:10px 13px;background:var(--accent);color:white;font-weight:700;font-size:14px}
+button.secondary{background:var(--pale);color:var(--green)}button.danger{background:#fbe9e6;color:#982f25}button.ghost{background:#f0f4f1;color:#31483c}
+button:active{opacity:.82}.full{width:100%}.actions{display:flex;flex-wrap:wrap;gap:7px}.actions button{flex:1 1 auto;min-width:80px}
+.person-list{display:grid;gap:9px}.person{position:relative;border:1px solid var(--border);border-radius:12px;min-width:0;overflow:hidden;background:#e9efeb}
+.person-surface{position:relative;z-index:1;padding:13px;background:#fff;transition:transform .18s ease;touch-action:pan-y}
+.person-top{display:flex;align-items:flex-start;justify-content:space-between;gap:9px}.person-info{min-width:0}.person-balance{font-size:14px;font-weight:650;margin-top:5px;overflow-wrap:anywhere}
+.person-actions{display:flex;gap:7px;margin-top:11px}.person-actions button{flex:1;min-width:0;padding:8px 9px;min-height:40px;font-size:13px}
+.person-actions.revealed{margin:0;position:absolute;z-index:0;inset:0 0 0 auto;width:176px;align-items:stretch;justify-content:center;padding:8px;gap:6px}
+.person-actions.revealed button{min-height:40px;align-self:center}
+.person.swiped .person-surface{transform:translateX(-176px)}
+.person.swiped .person-actions.revealed{z-index:0}
+.swipe-hint{font-size:11px;color:var(--muted);margin-top:7px}
+@media(prefers-reduced-motion:reduce){.person-surface{transition:none}}
+.empty{padding:12px 1px;color:var(--muted);font-size:14px}.hidden{display:none!important}.balance-box{padding:12px;margin-bottom:16px;background:var(--bg);border-radius:11px;font-weight:700;overflow-wrap:anywhere}.section-label{font-weight:750;margin:18px 0 9px}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}.type-toggle button{border:1px solid var(--border);background:#f4f7f5;color:var(--text);padding:11px 8px}.type-toggle button.active{background:var(--green);color:white;border-color:var(--green)}
+.transaction{padding:0;border-bottom:1px solid var(--border)}.transaction.swiped .transaction-surface{transform:translateX(-132px)}.transaction:last-child{border-bottom:0}.transaction-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.transaction-title{font-size:14px;font-weight:750;overflow-wrap:anywhere}.transaction-purpose{font-size:14px;margin-top:4px;overflow-wrap:anywhere}.transaction-date{font-size:12px;color:var(--muted);margin-top:3px}.transaction-actions{display:flex;gap:6px;flex-shrink:0}.transaction-actions button{min-height:36px;padding:6px 9px;font-size:12px}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.filters input,.filters select{margin-bottom:8px}.notice{padding:10px 12px;border-radius:10px;background:#fff7df;color:#755515;font-size:13px;margin-bottom:13px}.footnote{font-size:12px;color:var(--muted);margin:5px 2px 0}
+dialog{width:min(92vw,440px);border:1px solid var(--border);border-radius:16px;padding:18px;color:var(--text);box-shadow:0 12px 50px #0003}dialog::backdrop{background:#10251dcc}.dialog-actions{display:flex;gap:8px;margin-top:10px}.dialog-actions button{flex:1}
+@media(min-width:520px){main{padding-left:20px;padding-right:20px}.panel{padding:20px}.summary{gap:12px}.stat{padding:16px}}
+@media(max-width:360px){.panel{padding:13px 11px}.person-actions button{min-width:70px}.transaction-actions{flex-direction:column}.filters{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
 </head>
-
 <body>
-  <header>
-    <div class="header-inner">
-      <h1>My Money Tracker</h1>
-      <p>Your personal record of money with others</p>
+<header><div class="header-inner"><h1>My Money Tracker</h1><p>Your personal record of money with others</p></div></header>
+<main>
+  <div id="storageWarning" class="notice hidden" role="alert">Browser storage is unavailable. Changes may not be saved. Avoid refreshing or closing this page until the issue is resolved.</div>
+  <section class="summary" aria-label="Money summary">
+    <div class="stat"><div class="muted">People</div><div class="amount" id="peopleCount">0</div></div>
+    <div class="stat"><div class="muted">You'll Receive</div><div class="amount positive" id="owedToYou">Rs. 0</div></div>
+    <div class="stat"><div class="muted">You'll Pay</div><div class="amount negative" id="youOwe">Rs. 0</div></div>
+    <div class="stat"><div class="muted">Transactions</div><div class="amount" id="transactionCount">0</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Add a person</h2>
+    <form id="personForm">
+      <label for="personName">Person's name</label><input id="personName" maxlength="80" autocomplete="name" placeholder="e.g. Ali" required>
+      <button class="full" type="submit">+ Add Person</button>
+    </form>
+  </section>
+
+  <section class="panel" id="peopleSection">
+    <h2>People and balances</h2>
+    <label for="peopleSearch">Find a person</label><input id="peopleSearch" type="search" placeholder="Search names…" autocomplete="off">
+    <div id="peopleList" class="person-list"></div>
+    <p id="emptyPeople" class="empty">No people added yet. Add someone to get started.</p>
+    <p id="noPeopleMatch" class="empty hidden">No people match your search.</p>
+  </section>
+
+  <section id="detail" class="panel hidden">
+    <h2 id="detailTitle">Person's record</h2>
+    <div id="detailBalance" class="balance-box"></div>
+    <div class="actions">
+      <button id="renameSelected" class="secondary" type="button">Rename person</button>
+      <button id="deleteSelected" class="danger" type="button">Delete person</button>
     </div>
-  </header>
 
-  <main>
-    <section class="summary" aria-label="Money summary">
-      <div class="stat">
-        <div class="muted">People</div>
-        <div class="amount" id="peopleCount">0</div>
+    <div class="section-label" id="transactionFormTitle">Record a transaction</div>
+    <form id="transactionForm">
+      <label>Transaction type</label>
+      <div class="type-toggle">
+        <button type="button" id="paidType" class="active" aria-pressed="true">You Paid</button>
+        <button type="button" id="receivedType" aria-pressed="false">You Received</button>
       </div>
-      <div class="stat">
-        <div class="muted">You'll Receive</div>
-        <div class="amount positive" id="owedToYou">Rs. 0</div>
-      </div>
-      <div class="stat">
-        <div class="muted">You'll Pay</div>
-        <div class="amount negative" id="youOwe">Rs. 0</div>
-      </div>
-      <div class="stat">
-        <div class="muted">Transactions</div>
-        <div class="amount" id="transactionCount">0</div>
-      </div>
-    </section>
+      <input type="hidden" id="direction" value="sent">
+      <label for="amount">Amount (PKR)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="e.g. 5000" required>
+      <label for="purpose">Purpose / note</label><input id="purpose" maxlength="200" placeholder="e.g. Loan, rent, groceries" required>
+      <label for="date">Transaction date</label><input id="date" type="date" required>
+      <div class="actions"><button id="saveTransaction" type="submit">Save Transaction</button><button id="cancelEdit" class="secondary hidden" type="button">Cancel Edit</button></div>
+    </form>
 
-    <section class="panel">
-      <h2>Add a person</h2>
-      <form id="personForm">
-        <label for="personName">Person's name</label>
-        <input id="personName" placeholder="e.g. Ali" required maxlength="80"
-          autocomplete="name">
-        <button type="submit">+ Add Person</button>
-      </form>
-    </section>
+    <div class="section-label">Transaction history</div>
+    <div class="filters">
+      <input id="transactionSearch" type="search" placeholder="Search history…" aria-label="Search transaction history">
+      <select id="transactionFilter" aria-label="Filter transaction type">
+        <option value="all">All types</option><option value="sent">You Paid</option><option value="received">You Received</option>
+      </select>
+      <select id="transactionSort" aria-label="Sort transaction history">
+        <option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="highest">Highest amount</option><option value="lowest">Lowest amount</option>
+      </select>
+    </div>
+    <div id="history"></div>
+    <button id="closeDetail" class="secondary full" type="button" style="margin-top:14px">Back to People</button>
+  </section>
+  <p class="footnote">Your records are stored in this browser on this device. Clearing browser website data can erase them.</p>
+</main>
 
-    <section class="panel" id="peopleSection">
-      <h2>People and balances</h2>
-      <div id="peopleList" class="people-list"></div>
-      <p id="emptyPeople" class="empty">
-        No people added yet. Add someone to get started.
-      </p>
-    </section>
+<dialog id="confirmDialog" aria-labelledby="confirmTitle">
+  <h2 id="confirmTitle">Please confirm</h2><p id="confirmMessage"></p>
+  <div class="dialog-actions"><button id="confirmCancel" class="secondary" type="button">Cancel</button><button id="confirmProceed" class="danger" type="button">Delete</button></div>
+</dialog>
 
-    <section id="detail" class="panel hidden">
-      <h2 id="detailTitle">Person's record</h2>
-      <div id="detailBalance" class="balance-box"></div>
+<script>
+(() => {
+  "use strict";
+  const STORAGE_KEY = "myFirstAppMoneyTrackerV1";
+  const $ = id => document.getElementById(id);
+  let data = { people: [], transactions: [] };
+  let selectedPerson = null;
+  let editingTransaction = null;
+  let storageOK = true;
+  let pendingConfirm = null;
 
-      <div class="section-label">Record a transaction</div>
-      <form id="transactionForm">
-        <label for="direction">Transaction type</label>
-        <select id="direction">
-          <option value="sent">You Paid — you gave them money</option>
-          <option value="received">You Received — they gave you money</option>
-        </select>
-
-        <label for="amount">Amount (PKR)</label>
-        <input id="amount" type="number" min="0.01" step="0.01"
-          inputmode="decimal" placeholder="e.g. 5000" required>
-
-        <label for="purpose">Purpose</label>
-        <input id="purpose" placeholder="e.g. Loan, rent, groceries"
-          required maxlength="200">
-
-        <label for="date">Transaction date</label>
-        <input id="date" type="date" required>
-
-        <button type="submit">Save Transaction</button>
-      </form>
-
-      <div class="section-label">Transaction history</div>
-      <div id="history"></div>
-
-      <button id="closeDetail" class="secondary" type="button"
-        style="margin-top:14px">Back to People</button>
-    </section>
-
-    <p class="hint">
-      Your records are stored in this browser on this device.
-    </p>
-  </main>
-
-  <script>
-    const STORAGE_KEY = "myFirstAppMoneyTrackerV1";
-    let data = { people: [], transactions: [] };
-    let selectedPerson = null;
-
+  function readData() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed &&
-            Array.isArray(parsed.people) &&
-            Array.isArray(parsed.transactions)) {
+        if (parsed && Array.isArray(parsed.people) && Array.isArray(parsed.transactions)) {
           data = parsed;
+        } else {
+          throw new Error("Saved data has an unexpected format.");
         }
       }
-    } catch (error) {
-      alert("Saved data could not be read. Please avoid clearing browser data.");
+    } catch (e) {
+      storageOK = false;
+      $("storageWarning").classList.remove("hidden");
+      alert("Saved data could not be read. No saved data has been overwritten. Check browser storage before making changes.");
     }
+  }
 
-    const $ = id => document.getElementById(id);
-
-    const money = value => "Rs. " + Number(value).toLocaleString("en-PK", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    });
-
-    function localDate() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+  const money = value => "Rs. " + Number(value || 0).toLocaleString("en-PK", {
+    minimumFractionDigits: 0, maximumFractionDigits: 2
+  });
+  function localDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      storageOK = true;
+      $("storageWarning").classList.add("hidden");
+      return true;
+    } catch (e) {
+      storageOK = false;
+      $("storageWarning").classList.remove("hidden");
+      alert("The change could not be saved. Your previous saved version should remain. Free up browser storage and try again.");
+      return false;
     }
+  }
+  function balanceFor(personId) {
+    return data.transactions.filter(t => t.personId === personId).reduce((sum,t) => {
+      const amount = Number(t.amount) || 0;
+      return sum + (t.direction === "sent" ? amount : -amount);
+    },0);
+  }
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function balanceText(balance) {
+    if (balance > 0) return "They owe you " + money(balance);
+    if (balance < 0) return "You owe them " + money(Math.abs(balance));
+    return "All settled";
+  }
+  function askConfirm(title, message, actionLabel, callback) {
+    $("confirmTitle").textContent = title;
+    $("confirmMessage").textContent = message;
+    $("confirmProceed").textContent = actionLabel || "Delete";
+    pendingConfirm = callback;
+    if (typeof $("confirmDialog").showModal === "function") $("confirmDialog").showModal();
+    else if (window.confirm(message)) { const fn = pendingConfirm; pendingConfirm = null; fn && fn(); }
+  }
+  $("confirmCancel").addEventListener("click", () => {
+    pendingConfirm = null;
+    $("confirmDialog").close();
+  });
+  $("confirmProceed").addEventListener("click", () => {
+    const fn = pendingConfirm; pendingConfirm = null; $("confirmDialog").close();
+    if (fn) fn();
+  });
 
-    function save() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        return true;
-      } catch (error) {
-        alert("Could not save. Browser storage may be full or unavailable.");
-        return false;
+  // Horizontal swipe reveals contextual actions; vertical movement remains normal page scrolling.
+  function addSwipeGestures(container, surface, revealWidth) {
+    let startX=0, startY=0, tracking=false, opened=false;
+    const close = () => {
+      container.classList.remove("swiped");
+      surface.style.transform="";
+      opened=false;
+    };
+    const open = () => {
+      container.classList.add("swiped");
+      surface.style.transform=`translateX(-${revealWidth}px)`;
+      opened=true;
+    };
+    surface.addEventListener("touchstart", event => {
+      if (!event.touches || event.touches.length!==1) return;
+      startX=event.touches[0].clientX;
+      startY=event.touches[0].clientY;
+      tracking=true;
+    }, {passive:true});
+    surface.addEventListener("touchend", event => {
+      if (!tracking || !event.changedTouches || !event.changedTouches.length) return;
+      tracking=false;
+      const dx=event.changedTouches[0].clientX-startX;
+      const dy=event.changedTouches[0].clientY-startY;
+      if (Math.abs(dx)<35 || Math.abs(dx)<Math.abs(dy)*1.25) return;
+      if (dx<0) {
+        // Close any other open swipe row to keep the interface predictable.
+        document.querySelectorAll(".person.swiped").forEach(node => {
+          if (node!==container) {
+            node.classList.remove("swiped");
+            const child=node.querySelector(".person-surface");
+            if(child) child.style.transform="";
+          }
+        });
+        document.querySelectorAll(".transaction.swiped").forEach(node => {
+          if (node!==container) {
+            node.classList.remove("swiped");
+            const child=node.querySelector(".transaction-surface");
+            if(child) child.style.transform="";
+          }
+        });
+        open();
+      } else if (opened || container.classList.contains("swiped")) {
+        close();
       }
-    }
-
-    function balanceFor(personId) {
-      return data.transactions
-        .filter(t => t.personId === personId)
-        .reduce((total, t) => {
-          const amount = Number(t.amount) || 0;
-          return total + (t.direction === "sent" ? amount : -amount);
-        }, 0);
-    }
-
-    function makeText(tag, className, text) {
-      const element = document.createElement(tag);
-      if (className) element.className = className;
-      element.textContent = text;
-      return element;
-    }
-
-    function balanceText(balance) {
-      if (balance > 0) return "They owe you " + money(balance);
-      if (balance < 0) return "You owe them " + money(Math.abs(balance));
-      return "All settled";
-    }
-
-    function render() {
-      $("peopleCount").textContent = data.people.length;
-      $("transactionCount").textContent = data.transactions.length;
-
-      let owed = 0;
-      let owe = 0;
-
-      data.people.forEach(person => {
-        const balance = balanceFor(person.id);
-        if (balance > 0) owed += balance;
-        if (balance < 0) owe += Math.abs(balance);
-      });
-
-      $("owedToYou").textContent = money(owed);
-      $("youOwe").textContent = money(owe);
-
-      const list = $("peopleList");
-      list.replaceChildren();
-      $("emptyPeople").classList.toggle("hidden", data.people.length > 0);
-
-      data.people.forEach(person => {
-        const balance = balanceFor(person.id);
-        const card = document.createElement("div");
-        card.className = "person";
-
-        const top = document.createElement("div");
-        top.className = "person-top";
-
-        const info = document.createElement("div");
-        info.style.minWidth = "0";
-        info.append(
-          makeText("h3", "", person.name),
-          makeText(
-            "div",
-            "person-balance " +
-              (balance > 0 ? "positive" : balance < 0 ? "negative" : ""),
-            balanceText(balance) + (balance === 0 ? "" : " · " +
-              money(Math.abs(balance)))
-          )
-        );
-
-        const open = makeText("button", "small-button", "View");
-        open.type = "button";
-        open.addEventListener("click", () => openPerson(person.id));
-
-        top.append(info, open);
-        card.append(top);
-        list.append(card);
-      });
-
-      if (selectedPerson) {
-        openPerson(selectedPerson, false);
-      }
-    }
-
-    function openPerson(personId, shouldScroll = true) {
-      selectedPerson = personId;
-      const person = data.people.find(p => p.id === personId);
-
-      if (!person) {
-        selectedPerson = null;
-        $("detail").classList.add("hidden");
-        return;
-      }
-
-      $("detail").classList.remove("hidden");
-      $("detailTitle").textContent = person.name;
-
-      const balance = balanceFor(personId);
-      const balanceElement = $("detailBalance");
-      balanceElement.textContent = balanceText(balance) +
-        (balance !== 0 ? " · " + money(Math.abs(balance)) : "");
-      balanceElement.className = "balance-box " +
-        (balance > 0 ? "positive" : balance < 0 ? "negative" : "");
-
-      const history = $("history");
-      history.replaceChildren();
-
-      const transactions = data.transactions
-        .filter(t => t.personId === personId)
-        .sort((a, b) => b.date.localeCompare(a.date));
-
-      if (!transactions.length) {
-        history.append(makeText(
-          "p", "empty", "No transactions yet. Add the first one above."
-        ));
-      }
-
-      transactions.forEach(t => {
-        const item = document.createElement("div");
-        item.className = "transaction";
-
-        const title = makeText(
-          "div",
-          "transaction-title " +
-            (t.direction === "sent" ? "negative" : "positive"),
-          (t.direction === "sent" ? "You Paid · " : "You Received · ") +
-            money(t.amount)
-        );
-
-        const purpose = makeText("div", "transaction-purpose", t.purpose);
-        const date = makeText("div", "transaction-date", t.date);
-
-        item.append(title, purpose, date);
-        history.append(item);
-      });
-
-      if (shouldScroll) {
-        $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-
-    $("personForm").addEventListener("submit", event => {
-      event.preventDefault();
-
-      const input = $("personName");
-      const name = input.value.trim();
-      if (!name) return;
-
-      data.people.push({
-        id: Date.now().toString() + Math.random().toString(16).slice(2),
-        name
-      });
-
-      if (save()) {
-        input.value = "";
-        render();
-      } else {
-        data.people.pop();
+    }, {passive:true});
+    surface.addEventListener("click", event => {
+      if (container.classList.contains("swiped") && !event.target.closest("button")) {
+        close();
       }
     });
-
-    $("transactionForm").addEventListener("submit", event => {
-      event.preventDefault();
-      if (!selectedPerson) return;
-
-      const amount = Number($("amount").value);
-      const purpose = $("purpose").value.trim();
-      const date = $("date").value;
-
-      if (!Number.isFinite(amount) || amount <= 0 || !purpose || !date) {
-        alert("Please enter a valid amount, purpose, and date.");
-        return;
-      }
-
-      const transaction = {
-        id: Date.now().toString() + Math.random().toString(16).slice(2),
-        personId: selectedPerson,
-        direction: $("direction").value,
-        amount,
-        purpose,
-        date
-      };
-
-      data.transactions.push(transaction);
-
-      if (save()) {
-        $("amount").value = "";
-        $("purpose").value = "";
-        render();
-      } else {
-        data.transactions.pop();
-      }
+    surface.addEventListener("keydown", event => {
+      if (event.key==="Escape" && opened) close();
     });
+  }
 
-    $("closeDetail").addEventListener("click", () => {
-      selectedPerson = null;
-      $("detail").classList.add("hidden");
-      $("peopleSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  function render() {
+    $("peopleCount").textContent = data.people.length;
+    $("transactionCount").textContent = data.transactions.length;
+    let owed = 0, owe = 0;
+    data.people.forEach(p => {
+      const b = balanceFor(p.id);
+      if (b > 0) owed += b;
+      if (b < 0) owe += Math.abs(b);
     });
+    $("owedToYou").textContent = money(owed);
+    $("youOwe").textContent = money(owe);
+    const list = $("peopleList");
+    list.replaceChildren();
+    const query = $("peopleSearch").value.trim().toLocaleLowerCase();
+    const people = data.people.filter(p => p.name.toLocaleLowerCase().includes(query));
+    $("emptyPeople").classList.toggle("hidden", data.people.length > 0);
+    $("noPeopleMatch").classList.toggle("hidden", data.people.length === 0 || people.length > 0);
 
-    $("date").value = localDate();
+    people.forEach(person => {
+      const balance = balanceFor(person.id);
+      const card = el("div","person");
+      const actions = el("div","person-actions revealed");
+      const rename = el("button","secondary","Rename"); rename.type="button"; rename.setAttribute("aria-label","Rename "+person.name); rename.addEventListener("click",()=>renamePerson(person.id));
+      const del = el("button","danger","Delete"); del.type="button"; del.setAttribute("aria-label","Delete "+person.name); del.addEventListener("click",()=>deletePerson(person.id));
+      actions.append(rename,del);
+      const surface = el("div","person-surface");
+      const top = el("div","person-top");
+      const info = el("div","person-info");
+      info.append(el("h3","",person.name),el("div","person-balance "+(balance>0?"positive":balance<0?"negative":""),balanceText(balance)+(balance!==0?" · "+money(Math.abs(balance)):"")));
+      top.append(info);
+      const view = el("button","secondary full", "Open record"); view.type="button"; view.addEventListener("click",()=>openPerson(person.id));
+      surface.append(top,view,el("div","swipe-hint","Swipe left for rename or delete"));
+      card.append(actions,surface);
+      addSwipeGestures(card, surface, 176);
+      list.append(card);
+    });
+    if (selectedPerson) openPerson(selectedPerson,false);
+  }
+
+  function openPerson(personId, scroll=true) {
+    selectedPerson = personId;
+    const person = data.people.find(p=>p.id===personId);
+    if (!person) { selectedPerson=null; $("detail").classList.add("hidden"); return; }
+    $("detail").classList.remove("hidden");
+    $("detailTitle").textContent = person.name;
+    const b = balanceFor(personId);
+    $("detailBalance").textContent = balanceText(b)+(b!==0?" · "+money(Math.abs(b)):"");
+    $("detailBalance").className = "balance-box "+(b>0?"positive":b<0?"negative":"");
+    renderHistory();
+    if (scroll) $("detail").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function renderHistory() {
+    if (!selectedPerson) return;
+    const history = $("history"); history.replaceChildren();
+    const query = $("transactionSearch").value.trim().toLocaleLowerCase();
+    const filter = $("transactionFilter").value;
+    const sort = $("transactionSort").value;
+    let transactions = data.transactions.filter(t=>t.personId===selectedPerson);
+    if (filter!=="all") transactions=transactions.filter(t=>t.direction===filter);
+    if (query) transactions=transactions.filter(t=>
+      String(t.purpose||"").toLocaleLowerCase().includes(query) ||
+      String(t.date||"").includes(query) ||
+      money(t.amount).toLocaleLowerCase().includes(query) ||
+      (t.direction==="sent"?"you paid":"you received").includes(query)
+    );
+    transactions.sort((a,b)=>{
+      if(sort==="oldest") return a.date.localeCompare(b.date);
+      if(sort==="highest") return Number(b.amount)-Number(a.amount);
+      if(sort==="lowest") return Number(a.amount)-Number(b.amount);
+      return b.date.localeCompare(a.date);
+    });
+    if (!transactions.length) {
+      history.append(el("p","empty","No transactions match these filters."));
+      return;
+    }
+    transactions.forEach(t=>{
+      const item=el("div","transaction");
+      item.style.position="relative";
+      item.style.overflow="hidden";
+      item.style.borderRadius="8px";
+      const actions=el("div","transaction-actions");
+      actions.style.position="absolute"; actions.style.inset="0 0 0 auto";
+      actions.style.width="132px"; actions.style.justifyContent="center";
+      actions.style.alignItems="center"; actions.style.padding="8px";
+      actions.style.background="#e9efeb";
+      const edit=el("button","secondary","Edit"); edit.type="button"; edit.addEventListener("click",()=>startEdit(t.id));
+      const del=el("button","danger","Delete"); del.type="button"; del.addEventListener("click",()=>deleteTransaction(t.id));
+      actions.append(edit,del);
+      const surface=el("div","transaction-surface");
+      surface.style.position="relative"; surface.style.zIndex="1"; surface.style.background="#fff";
+      surface.style.padding="13px 0"; surface.style.transition="transform .18s ease"; surface.style.touchAction="pan-y";
+      const details=el("div","");
+      details.append(
+        el("div","transaction-title "+(t.direction==="sent"?"negative":"positive"),(t.direction==="sent"?"You Paid · ":"You Received · ")+money(t.amount)),
+        el("div","transaction-purpose",t.purpose||"(No purpose entered)"),
+        el("div","transaction-date",t.date||"No date"),
+        el("div","swipe-hint","Swipe left for actions")
+      );
+      surface.append(details);
+      item.append(actions,surface);
+      addSwipeGestures(item,surface,132);
+      history.append(item);
+    });
+  }
+
+  function setDirection(direction) {
+    $("direction").value=direction;
+    $("paidType").classList.toggle("active",direction==="sent");
+    $("receivedType").classList.toggle("active",direction==="received");
+    $("paidType").setAttribute("aria-pressed",String(direction==="sent"));
+    $("receivedType").setAttribute("aria-pressed",String(direction==="received"));
+  }
+  $("paidType").addEventListener("click",()=>setDirection("sent"));
+  $("receivedType").addEventListener("click",()=>setDirection("received"));
+
+  function resetTransactionForm() {
+    editingTransaction=null;
+    $("transactionForm").reset();
+    $("date").value=localDate();
+    setDirection("sent");
+    $("transactionFormTitle").textContent="Record a transaction";
+    $("saveTransaction").textContent="Save Transaction";
+    $("cancelEdit").classList.add("hidden");
+  }
+  function startEdit(id) {
+    const t=data.transactions.find(x=>x.id===id);
+    if (!t) return;
+    editingTransaction=id;
+    $("transactionFormTitle").textContent="Edit transaction";
+    $("saveTransaction").textContent="Save Changes";
+    $("cancelEdit").classList.remove("hidden");
+    setDirection(t.direction);
+    $("amount").value=t.amount;
+    $("purpose").value=t.purpose;
+    $("date").value=t.date;
+    $("transactionFormTitle").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  $("cancelEdit").addEventListener("click",resetTransactionForm);
+
+  function renamePerson(id) {
+    const person=data.people.find(p=>p.id===id); if(!person) return;
+    const name=window.prompt("Enter the person's new name:",person.name);
+    if(name===null) return;
+    const clean=name.trim();
+    if(!clean) { alert("Name cannot be empty."); return; }
+    if(clean.length>80) { alert("Name must be 80 characters or fewer."); return; }
+    const old=person.name; person.name=clean;
+    if(!save()) person.name=old;
     render();
-  </script>
+  }
+
+  function deletePerson(id) {
+    const person=data.people.find(p=>p.id===id); if(!person) return;
+    const count=data.transactions.filter(t=>t.personId===id).length;
+    const message=count
+      ? `Delete ${person.name} and all ${count} transaction(s) linked to them? This cannot be undone.`
+      : `Delete ${person.name}? This cannot be undone.`;
+    askConfirm("Delete person?",message,"Delete person",()=>{
+      const oldData=data;
+      data={people:data.people.filter(p=>p.id!==id),transactions:data.transactions.filter(t=>t.personId!==id)};
+      if(!save()) data=oldData;
+      else if(selectedPerson===id) { selectedPerson=null; $("detail").classList.add("hidden"); resetTransactionForm(); }
+      render();
+    });
+  }
+
+  function deleteTransaction(id) {
+    const t=data.transactions.find(x=>x.id===id); if(!t) return;
+    askConfirm("Delete transaction?",`Delete this ${money(t.amount)} transaction? The person's balance will be recalculated. This cannot be undone.`,"Delete transaction",()=>{
+      const old=data;
+      data={people:data.people,transactions:data.transactions.filter(x=>x.id!==id)};
+      if(!save()) data=old;
+      if(editingTransaction===id) resetTransactionForm();
+      render();
+    });
+  }
+
+  $("personForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const input=$("personName"), name=input.value.trim();
+    if(!name) return;
+    if(name.length>80) { alert("Name must be 80 characters or fewer."); return; }
+    const person={id:Date.now().toString()+Math.random().toString(16).slice(2),name};
+    data.people.push(person);
+    if(save()) { input.value=""; $("peopleSearch").value=""; render(); }
+    else data.people.pop();
+  });
+
+  $("transactionForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    if(!selectedPerson) { alert("Open a person's record first."); return; }
+    const amount=Number($("amount").value), purpose=$("purpose").value.trim(), date=$("date").value;
+    if(!Number.isFinite(amount)||amount<=0||!purpose||!date) { alert("Enter a valid amount, purpose, and date."); return; }
+    if(date>localDate()) { if(!window.confirm("This date is in the future. Save anyway?")) return; }
+    const isEdit=editingTransaction!==null;
+    const oldIndex=isEdit?data.transactions.findIndex(t=>t.id===editingTransaction):-1;
+    const oldTransaction=oldIndex>=0?data.transactions[oldIndex]:null;
+    const transaction={
+      id:isEdit?editingTransaction:Date.now().toString()+Math.random().toString(16).slice(2),
+      personId:selectedPerson,direction:$("direction").value,amount,purpose,date
+    };
+    if(isEdit && oldIndex>=0) data.transactions[oldIndex]=transaction;
+    else data.transactions.push(transaction);
+    if(save()) { resetTransactionForm(); render(); }
+    else {
+      if(isEdit && oldIndex>=0) data.transactions[oldIndex]=oldTransaction;
+      else data.transactions.pop();
+    }
+  });
+
+  $("renameSelected").addEventListener("click",()=>{if(selectedPerson) renamePerson(selectedPerson);});
+  $("deleteSelected").addEventListener("click",()=>{if(selectedPerson) deletePerson(selectedPerson);});
+  $("closeDetail").addEventListener("click",()=>{
+    selectedPerson=null; $("detail").classList.add("hidden"); resetTransactionForm();
+    $("peopleSection").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  $("peopleSearch").addEventListener("input",render);
+  ["transactionSearch","transactionFilter","transactionSort"].forEach(id=>{
+    $(id).addEventListener(id==="transactionSearch"?"input":"change",renderHistory);
+  });
+  $("date").value=localDate();
+  readData();
+  render();
+})();
+</script>
 </body>
 </html>
