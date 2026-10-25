@@ -3,77 +3,313 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#123b32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>My Money Tracker</title>
+
   <style>
+    :root {
+      --green: #123b32;
+      --green-light: #e5f3eb;
+      --accent: #197653;
+      --bg: #f4f7f5;
+      --text: #1c3028;
+      --muted: #687970;
+      --border: #e1e9e4;
+      --red: #b5473b;
+      --white: #ffffff;
+    }
+
     * { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+    }
+
     body {
-      margin: 0; font-family: Arial, sans-serif;
-      background: #f3f6f4; color: #182c25;
-    }
-    header {
-      background: #123b32; color: white;
-      padding: 24px 18px; border-radius: 0 0 22px 22px;
-    }
-    header h1 { margin: 0 0 8px; font-size: 25px; }
-    header p { margin: 0; color: #d4e7dd; }
-    main { max-width: 650px; margin: auto; padding: 16px; }
-    .summary, .panel, .person {
-      background: white; border-radius: 14px;
-      padding: 16px; margin-bottom: 14px;
-      box-shadow: 0 2px 8px #183b3210;
-    }
-    .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .muted { color: #63746c; font-size: 13px; }
-    .amount { font-size: 20px; font-weight: bold; margin-top: 7px; }
-    h2 { font-size: 18px; margin: 0 0 14px; }
-    input, select, button {
-      width: 100%; padding: 12px; margin: 5px 0 10px;
-      border-radius: 9px; border: 1px solid #d4ddd7;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Arial, sans-serif;
       font-size: 16px;
+      line-height: 1.45;
+      -webkit-tap-highlight-color: transparent;
     }
+
+    button, input, select {
+      font: inherit;
+    }
+
     button {
-      background: #176b50; color: white;
-      border: none; font-weight: bold; cursor: pointer;
+      min-height: 46px;
+      cursor: pointer;
+      touch-action: manipulation;
     }
-    button.secondary { background: #e4eee8; color: #164b38; }
-    .person { cursor: pointer; }
-    .person h3 { margin: 0 0 7px; }
-    .person p { margin: 5px 0; }
-    .positive { color: #147447; }
-    .negative { color: #b04435; }
-    .transaction {
-      padding: 12px 0; border-bottom: 1px solid #e7ece8;
+
+    header {
+      background: var(--green);
+      color: white;
+      padding: calc(22px + env(safe-area-inset-top)) 18px 25px;
+      border-radius: 0 0 23px 23px;
+    }
+
+    .header-inner, main {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin: 5px 0 0;
+      color: #d1e3d9;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 16px 14px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 17px;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 15px 13px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      box-shadow: 0 3px 12px #173b2d08;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .amount {
+      margin-top: 6px;
+      font-size: clamp(18px, 4.5vw, 23px);
+      font-weight: 750;
+      letter-spacing: -0.4px;
       overflow-wrap: anywhere;
     }
-    .transaction:last-child { border-bottom: none; }
-    .hidden { display: none; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .small-button { padding: 9px; font-size: 14px; }
+
+    .positive { color: #177449; }
+    .negative { color: var(--red); }
+
+    .panel {
+      padding: 17px 15px;
+      margin-bottom: 15px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 3px 12px #173b2d08;
+      scroll-margin-top: 12px;
+    }
+
+    h2 {
+      margin: 0 0 13px;
+      font-size: 18px;
+      letter-spacing: -0.2px;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-size: 13px;
+      font-weight: 650;
+      color: #52655b;
+    }
+
+    input, select {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      min-height: 47px;
+      margin: 0 0 12px;
+      padding: 11px 12px;
+      border: 1px solid #d4dfd8;
+      border-radius: 10px;
+      background: white;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    input:focus, select:focus, button:focus-visible {
+      outline: 3px solid #8bc5a8;
+      outline-offset: 2px;
+    }
+
+    button {
+      width: 100%;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    button:active {
+      opacity: 0.84;
+    }
+
+    button.secondary {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .people-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .person {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .person-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .person-balance {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .person .small-button {
+      width: auto;
+      min-width: 100px;
+      min-height: 40px;
+      padding: 8px 11px;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .empty {
+      padding: 12px 2px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .balance-box {
+      padding: 13px;
+      margin-bottom: 18px;
+      border-radius: 12px;
+      background: var(--bg);
+      font-size: 15px;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .section-label {
+      margin: 20px 0 10px;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    .transaction {
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+
+    .transaction:last-child {
+      border-bottom: 0;
+    }
+
+    .transaction-title {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .transaction-purpose {
+      margin-top: 4px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .transaction-date {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hidden { display: none !important; }
+
+    .hint {
+      margin: -3px 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (min-width: 520px) {
+      main { padding-left: 20px; padding-right: 20px; }
+      .panel { padding: 20px; }
+      .summary { gap: 12px; }
+      .stat { padding: 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>My Money Tracker</h1>
-    <p>Keep track of money between you and others</p>
+    <div class="header-inner">
+      <h1>My Money Tracker</h1>
+      <p>Your personal record of money with others</p>
+    </div>
   </header>
 
   <main>
-    <section class="summary">
-      <div>
+    <section class="summary" aria-label="Money summary">
+      <div class="stat">
         <div class="muted">People</div>
         <div class="amount" id="peopleCount">0</div>
       </div>
-      <div>
-        <div class="muted">Money owed to you</div>
+      <div class="stat">
+        <div class="muted">You'll Receive</div>
         <div class="amount positive" id="owedToYou">Rs. 0</div>
       </div>
-      <div>
-        <div class="muted">You owe others</div>
+      <div class="stat">
+        <div class="muted">You'll Pay</div>
         <div class="amount negative" id="youOwe">Rs. 0</div>
       </div>
-      <div>
+      <div class="stat">
         <div class="muted">Transactions</div>
         <div class="amount" id="transactionCount">0</div>
       </div>
@@ -82,41 +318,57 @@
     <section class="panel">
       <h2>Add a person</h2>
       <form id="personForm">
-        <input id="personName" placeholder="Person's name" required maxlength="80">
+        <label for="personName">Person's name</label>
+        <input id="personName" placeholder="e.g. Ali" required maxlength="80"
+          autocomplete="name">
         <button type="submit">+ Add Person</button>
       </form>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="peopleSection">
       <h2>People and balances</h2>
-      <div id="peopleList"></div>
-      <p id="emptyPeople" class="muted">No people yet. Add your first person above.</p>
+      <div id="peopleList" class="people-list"></div>
+      <p id="emptyPeople" class="empty">
+        No people added yet. Add someone to get started.
+      </p>
     </section>
 
     <section id="detail" class="panel hidden">
-      <h2 id="detailTitle">Person</h2>
-      <p id="detailBalance"></p>
+      <h2 id="detailTitle">Person's record</h2>
+      <div id="detailBalance" class="balance-box"></div>
 
-      <h2>Record a transaction</h2>
+      <div class="section-label">Record a transaction</div>
       <form id="transactionForm">
-        <label for="direction" class="muted">Transaction type</label>
+        <label for="direction">Transaction type</label>
         <select id="direction">
-          <option value="sent">I sent money to them</option>
-          <option value="received">They sent money to me</option>
+          <option value="sent">You Paid — you gave them money</option>
+          <option value="received">You Received — they gave you money</option>
         </select>
-        <label for="amount" class="muted">Amount (PKR)</label>
-        <input id="amount" type="number" min="0.01" step="0.01" placeholder="e.g. 5000" required>
-        <label for="purpose" class="muted">Purpose</label>
-        <input id="purpose" placeholder="e.g. Loan, rent, groceries" required maxlength="200">
-        <label for="date" class="muted">Date</label>
+
+        <label for="amount">Amount (PKR)</label>
+        <input id="amount" type="number" min="0.01" step="0.01"
+          inputmode="decimal" placeholder="e.g. 5000" required>
+
+        <label for="purpose">Purpose</label>
+        <input id="purpose" placeholder="e.g. Loan, rent, groceries"
+          required maxlength="200">
+
+        <label for="date">Transaction date</label>
         <input id="date" type="date" required>
+
         <button type="submit">Save Transaction</button>
       </form>
 
-      <h2>Transaction history</h2>
+      <div class="section-label">Transaction history</div>
       <div id="history"></div>
-      <button id="closeDetail" class="secondary" type="button">Close Person</button>
+
+      <button id="closeDetail" class="secondary" type="button"
+        style="margin-top:14px">Back to People</button>
     </section>
+
+    <p class="hint">
+      Your records are stored in this browser on this device.
+    </p>
   </main>
 
   <script>
@@ -128,164 +380,235 @@
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed.people) &&
-            Array.isArray(parsed.transactions)) data = parsed;
+        if (parsed &&
+            Array.isArray(parsed.people) &&
+            Array.isArray(parsed.transactions)) {
+          data = parsed;
+        }
       }
     } catch (error) {
-      alert("Could not read saved data in this browser.");
+      alert("Saved data could not be read. Please avoid clearing browser data.");
     }
 
-    const money = value => "Rs. " + Number(value).toLocaleString(
-      "en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 2 }
-    );
+    const $ = id => document.getElementById(id);
+
+    const money = value => "Rs. " + Number(value).toLocaleString("en-PK", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+
+    function localDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
 
     function save() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        return true;
       } catch (error) {
-        alert("Could not save data. Your browser storage may be full.");
+        alert("Could not save. Browser storage may be full or unavailable.");
+        return false;
       }
     }
 
     function balanceFor(personId) {
       return data.transactions
         .filter(t => t.personId === personId)
-        .reduce((total, t) =>
-          total + (t.direction === "sent" ? t.amount : -t.amount), 0);
+        .reduce((total, t) => {
+          const amount = Number(t.amount) || 0;
+          return total + (t.direction === "sent" ? amount : -amount);
+        }, 0);
+    }
+
+    function makeText(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function balanceText(balance) {
+      if (balance > 0) return "They owe you " + money(balance);
+      if (balance < 0) return "You owe them " + money(Math.abs(balance));
+      return "All settled";
     }
 
     function render() {
-      document.getElementById("peopleCount").textContent = data.people.length;
-      document.getElementById("transactionCount").textContent =
-        data.transactions.length;
+      $("peopleCount").textContent = data.people.length;
+      $("transactionCount").textContent = data.transactions.length;
 
-      let owed = 0, owe = 0;
+      let owed = 0;
+      let owe = 0;
+
       data.people.forEach(person => {
         const balance = balanceFor(person.id);
         if (balance > 0) owed += balance;
         if (balance < 0) owe += Math.abs(balance);
       });
-      document.getElementById("owedToYou").textContent = money(owed);
-      document.getElementById("youOwe").textContent = money(owe);
 
-      const list = document.getElementById("peopleList");
+      $("owedToYou").textContent = money(owed);
+      $("youOwe").textContent = money(owe);
+
+      const list = $("peopleList");
       list.replaceChildren();
-      document.getElementById("emptyPeople").classList.toggle(
-        "hidden", data.people.length > 0
-      );
+      $("emptyPeople").classList.toggle("hidden", data.people.length > 0);
 
       data.people.forEach(person => {
         const balance = balanceFor(person.id);
         const card = document.createElement("div");
         card.className = "person";
-        const name = document.createElement("h3");
-        name.textContent = person.name;
-        const amount = document.createElement("p");
-        amount.className = balance > 0 ? "positive" :
-          balance < 0 ? "negative" : "";
-        amount.textContent = balance > 0
-          ? "They owe you " + money(balance)
-          : balance < 0
-            ? "You owe them " + money(Math.abs(balance))
-            : "All settled — " + money(0);
-        const open = document.createElement("button");
-        open.className = "small-button";
-        open.textContent = "Open Record";
+
+        const top = document.createElement("div");
+        top.className = "person-top";
+
+        const info = document.createElement("div");
+        info.style.minWidth = "0";
+        info.append(
+          makeText("h3", "", person.name),
+          makeText(
+            "div",
+            "person-balance " +
+              (balance > 0 ? "positive" : balance < 0 ? "negative" : ""),
+            balanceText(balance) + (balance === 0 ? "" : " · " +
+              money(Math.abs(balance)))
+          )
+        );
+
+        const open = makeText("button", "small-button", "View");
+        open.type = "button";
         open.addEventListener("click", () => openPerson(person.id));
-        card.append(name, amount, open);
+
+        top.append(info, open);
+        card.append(top);
         list.append(card);
       });
 
-      if (selectedPerson) openPerson(selectedPerson);
+      if (selectedPerson) {
+        openPerson(selectedPerson, false);
+      }
     }
 
-    function openPerson(personId) {
+    function openPerson(personId, shouldScroll = true) {
       selectedPerson = personId;
       const person = data.people.find(p => p.id === personId);
+
       if (!person) {
         selectedPerson = null;
-        document.getElementById("detail").classList.add("hidden");
+        $("detail").classList.add("hidden");
         return;
       }
 
-      document.getElementById("detail").classList.remove("hidden");
-      document.getElementById("detailTitle").textContent = person.name;
-      const balance = balanceFor(personId);
-      document.getElementById("detailBalance").textContent =
-        balance > 0 ? "They owe you " + money(balance) :
-        balance < 0 ? "You owe them " + money(Math.abs(balance)) :
-        "Your balance is settled.";
+      $("detail").classList.remove("hidden");
+      $("detailTitle").textContent = person.name;
 
-      const history = document.getElementById("history");
+      const balance = balanceFor(personId);
+      const balanceElement = $("detailBalance");
+      balanceElement.textContent = balanceText(balance) +
+        (balance !== 0 ? " · " + money(Math.abs(balance)) : "");
+      balanceElement.className = "balance-box " +
+        (balance > 0 ? "positive" : balance < 0 ? "negative" : "");
+
+      const history = $("history");
       history.replaceChildren();
+
       const transactions = data.transactions
         .filter(t => t.personId === personId)
         .sort((a, b) => b.date.localeCompare(a.date));
 
       if (!transactions.length) {
-        history.textContent = "No transactions recorded yet.";
+        history.append(makeText(
+          "p", "empty", "No transactions yet. Add the first one above."
+        ));
       }
 
       transactions.forEach(t => {
         const item = document.createElement("div");
         item.className = "transaction";
-        const description = document.createElement("div");
-        description.textContent =
-          (t.direction === "sent" ? "You sent " : "You received ") +
-          money(t.amount);
-        const purpose = document.createElement("div");
-        purpose.textContent = t.purpose;
-        const date = document.createElement("div");
-        date.className = "muted";
-        date.textContent = t.date;
-        item.append(description, purpose, date);
+
+        const title = makeText(
+          "div",
+          "transaction-title " +
+            (t.direction === "sent" ? "negative" : "positive"),
+          (t.direction === "sent" ? "You Paid · " : "You Received · ") +
+            money(t.amount)
+        );
+
+        const purpose = makeText("div", "transaction-purpose", t.purpose);
+        const date = makeText("div", "transaction-date", t.date);
+
+        item.append(title, purpose, date);
         history.append(item);
       });
+
+      if (shouldScroll) {
+        $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
 
-    document.getElementById("personForm").addEventListener("submit", event => {
+    $("personForm").addEventListener("submit", event => {
       event.preventDefault();
-      const input = document.getElementById("personName");
+
+      const input = $("personName");
       const name = input.value.trim();
       if (!name) return;
+
       data.people.push({
         id: Date.now().toString() + Math.random().toString(16).slice(2),
         name
       });
-      save();
-      input.value = "";
-      render();
+
+      if (save()) {
+        input.value = "";
+        render();
+      } else {
+        data.people.pop();
+      }
     });
 
-    document.getElementById("transactionForm").addEventListener("submit", event => {
+    $("transactionForm").addEventListener("submit", event => {
       event.preventDefault();
       if (!selectedPerson) return;
-      const amount = Number(document.getElementById("amount").value);
-      const purpose = document.getElementById("purpose").value.trim();
-      const date = document.getElementById("date").value;
+
+      const amount = Number($("amount").value);
+      const purpose = $("purpose").value.trim();
+      const date = $("date").value;
+
       if (!Number.isFinite(amount) || amount <= 0 || !purpose || !date) {
         alert("Please enter a valid amount, purpose, and date.");
         return;
       }
-      data.transactions.push({
+
+      const transaction = {
         id: Date.now().toString() + Math.random().toString(16).slice(2),
         personId: selectedPerson,
-        direction: document.getElementById("direction").value,
-        amount, purpose, date
-      });
-      save();
-      document.getElementById("amount").value = "";
-      document.getElementById("purpose").value = "";
-      render();
+        direction: $("direction").value,
+        amount,
+        purpose,
+        date
+      };
+
+      data.transactions.push(transaction);
+
+      if (save()) {
+        $("amount").value = "";
+        $("purpose").value = "";
+        render();
+      } else {
+        data.transactions.pop();
+      }
     });
 
-    document.getElementById("closeDetail").addEventListener("click", () => {
+    $("closeDetail").addEventListener("click", () => {
       selectedPerson = null;
-      document.getElementById("detail").classList.add("hidden");
+      $("detail").classList.add("hidden");
+      $("peopleSection").scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    document.getElementById("date").value =
-      new Date().toLocaleDateString("en-CA");
+    $("date").value = localDate();
     render();
   </script>
 </body>
